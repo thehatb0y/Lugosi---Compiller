@@ -1,0 +1,32 @@
+main{
+    var int a;
+    var int b;
+    var bool c;
+    var float d;
+    var void e;
+    
+    a := 10;
+    b := 1;
+    c := true;
+
+    a := (a+b);
+    b := (a-b);
+
+    a := (a*b);
+    a := (a/5);
+
+    return f(a, b, c);
+}
+
+function void f(int a, int b, bool c){
+
+    while((c == true))do{
+        a := (a-b);
+        if((1 > a)){
+            c := false;
+        };
+    };
+
+    print(a);
+    return a;
+}

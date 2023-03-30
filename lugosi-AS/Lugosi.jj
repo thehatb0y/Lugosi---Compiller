@@ -1,0 +1,158 @@
+PARSER_BEGIN(LugosiParser)
+import java.io.*;
+
+public class LugosiParser {
+  public static void main(String args[]) throws ParseException,IOException {
+      LugosiParser parser = new LugosiParser(new FileInputStream(args[0]));
+      parser.LugosiParser();
+      System.out.println("Parsing Successful"); 
+  }
+}
+
+PARSER_END(LugosiParser)
+
+SKIP : {
+    " "
+  | "\t"
+  | "\n"
+  | "\r"
+}
+
+TOKEN : {
+    <MAIN: "main"> 
+  | <VAR: "var"> 
+  | <IF: "if"> 
+  | <WHILE: "while"> 
+  | <DO: "do"> 
+  | <RETURN: "return"> 
+  | <PRINT: "print"> 
+  | <FUNCTION: "function"> 
+  | <TRUE: "true"> 
+  | <FALSE: "false">
+  | <INT: "int"> 
+  | <BOOL: "bool">
+  | <VOID: "void"> 
+  | <FLOAT: "float">
+}
+
+TOKEN : {
+    <LPAREN: "(">
+  | <RPAREN: ")">
+  | <LBRACE: "{">
+  | <RBRACE: "}">
+  | <SEMICOLON: ";">
+  | <COMMA: ",">
+  | <ASSIGN: ":=">
+  | <PLUS: "+">
+  | <MINUS: "-">
+  | <MULT: "*">
+  | <DIV: "/">
+  | <AND: "&&">
+  | <OR: "||">
+  | <LT: "<">
+  | <GT: ">">
+  | <EQ: "==">
+}
+
+TOKEN : {
+  <NUM : (["0"-"9"])+>
+  |< ID: ["a"-"z","A"-"Z"] ( ["a"-"z","A"-"Z","0"-"9"])* (["_"])* >
+}
+
+
+void LugosiParser () : {} {
+    Main()
+    Func()
+    <EOF>
+}
+
+// LISTAARG -> TIPO TOKEN_id | LISTAARG "," TIPO TOKEN_id
+void ListaArgPrime() : {} {
+    ("," Tipo() <ID> ListaArgPrime())?
+}
+
+void ListaArg() : {} {
+    Tipo() <ID> ListaArgPrime()
+}
+
+// FUNC -> FUNC "function" TIPO TOKEN_id "(" LISTAARG? ")" "{" VARDECL SEQCOMANDOS "}" | "function" TIPO TOKEN_id "(" LISTAARG? ")" "{" VARDECL SEQCOMANDOS "}"
+void Func() : {} {
+    (FuncPrime())?
+}
+
+void FuncPrime() : {} {
+    (<FUNCTION> Tipo() <ID> <LPAREN> (ListaArg())? <RPAREN> <LBRACE> VarDecl() SeqComandos() <RBRACE> Func())
+}
+
+
+
+//LISTAEXP -> EXP | LISTAEXP "," EXP
+void ListaExpPrime() : {}
+{
+    ("," Exp() ListaExpPrime())?
+}
+
+void ListaExp() : {} {
+    Exp() ListaExpPrime()
+}
+
+// OP -> "+" | "-" | "*" | "/" | "&&" | "||" | "<" | ">" | "=="
+void Op () : {} {
+    <PLUS> | <MINUS> | <MULT> | <DIV> | <AND> | <OR> | <LT> | <GT> | <EQ>
+}
+
+// FATOR -> TOKEN_id | TOKEN_id "(" LISTAEXP? ")" | TOKEN_numliteral | "true" | "false"
+void FatorPrime() : {} {
+    <LPAREN> (ListaExp())? <RPAREN>
+}
+
+void Fator () : {} {
+    <ID> (FatorPrime())? | <NUM> | <TRUE> | <FALSE>
+}
+
+// EXP -> "(" EXP OP EXP ")" | FATOR
+void Exp () : {} {
+    <LPAREN> Exp() Op() Exp() <RPAREN> | Fator()
+}
+
+// COMANDO -> TOKEN_id ":=" EXP ";" | TOKEN_id "(" LISTAEXP? ")" ";" | "if" "(" EXP ")" "{" SEQCOMANDOS "}" ";" | "while" "(" EXP ")" "do" "{" SEQCOMANDOS "}" ";" | "do" "{" SEQCOMANDOS "}" "while" "(" EXP ")" ";" | "return" EXP ";" | "print" "(" EXP ")" ";"
+void ComandoPrime() : {}{
+    <ASSIGN> Exp() <SEMICOLON> | <LPAREN> (ListaExp())? <RPAREN> <SEMICOLON>
+}
+
+void Comando () : {} {
+    <ID> ComandoPrime() 
+    | <IF> <LPAREN> Exp() <RPAREN> <LBRACE> SeqComandos() <RBRACE> <SEMICOLON> 
+    | <WHILE> <LPAREN> Exp() <RPAREN> <DO> <LBRACE> SeqComandos() <RBRACE> <SEMICOLON> 
+    | <DO> <LBRACE> SeqComandos() <RBRACE> <WHILE> <LPAREN> Exp() <RPAREN> <SEMICOLON> 
+    | <RETURN> Exp() <SEMICOLON> 
+    | <PRINT> <LPAREN> Exp() <RPAREN> <SEMICOLON>
+}
+
+// SEQCOMANDOS -> SEQCOMANDOS COMANDO | vazio
+void SeqComandos () : {} {
+    (SeqComandosPrime())?
+}
+
+void SeqComandosPrime () : {} {
+    (Comando() SeqComandos())
+}
+
+// TIPO -> "int" | "bool" | "float" | "void
+void Tipo () : {} {
+    (<INT>) | (<BOOL>) | (<VOID>) | (<FLOAT>)
+}
+
+
+void VarDecl() : {} {
+    (VarDeclPrime())?
+}
+
+//  VARDECL -> VARDECL "var" TIPO TOKEN_id ";" | vazio
+void VarDeclPrime() : {} {
+    (<VAR> Tipo() <ID> <SEMICOLON> VarDecl())
+}
+
+void Main () : {} {
+    <MAIN> <LBRACE> VarDecl() SeqComandos() <RBRACE>
+}

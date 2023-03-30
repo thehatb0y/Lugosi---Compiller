@@ -1,0 +1,5 @@
+main{
+    var int teste_;
+    teste_ := 9;
+    print (teste_);
+}
